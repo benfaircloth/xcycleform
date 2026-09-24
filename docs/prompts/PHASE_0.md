@@ -1,8 +1,19 @@
-# Execute Phase 0 — Foundation
+# Execute Phase 0 — Visual Pipeline Validation
 
-Build only the application foundation. Establish a clean local developer experience, typed app shell, build/lint/type-test path, and minimal project structure. Do not integrate camera, MediaPipe, persistence, SeekrFlow, RAG, or analytics.
+Validate the core visual pipeline end-to-end:
 
-Focus on making the next phase easy to validate without prebuilding it. A future capability is not a current requirement.
+```text
+prerecorded video
+→ MediaPipe pose estimation
+→ landmark/skeleton overlay
+→ confidence visibility
+→ deterministic knee-angle calculation
+→ simple visual measurement feedback
+→ paused-frame inspection
+→ live-camera validation
+```
+
+Start with prerecorded video for repeatability and deterministic debugging. Add live camera only after the prerecorded pipeline is stable. Both paths must use the same pose-processing, geometry, and rendering components.
 
 Acceptance criteria are exactly those in Phase 0 of `PHASE_PLAN.md`.
 

@@ -1,35 +1,51 @@
 # xCycleForm Strict Phase Plan
 
-## Phase 0 — Foundation
+## Phase 0 — Visual Pipeline Validation
 
 ### Objective
-Create the smallest reliable application shell and deterministic development/test environment.
+Validate the core visual pipeline: can we reliably observe a cyclist from a side-profile video, extract useful pose information, derive at least one trustworthy cycling-relevant measurement, and present that information visually?
 
 ### Permitted scope
-- browser/PWA application shell;
-- basic route/view structure needed for current development;
-- typed domain primitives used immediately by Phase 0 or required to compile Phase 1 boundaries;
-- linting, type checking, unit-test harness;
-- simple diagnostics/dev panel if necessary for development;
-- documented local run/build/test commands.
+- browser/PWA application shell, build/lint/type-test path;
+- prerecorded video playback with pause, seek, and frame stepping;
+- client-side MediaPipe pose estimation against video frames;
+- skeleton/landmark overlay aligned to the rider;
+- per-landmark confidence visibility;
+- deterministic knee-angle calculation (hip, knee, ankle);
+- measurement confidence gating (valid / low confidence / unavailable);
+- simple visual measurement feedback (angle value + measurement status);
+- debug/diagnostics panel (FPS, latency, coordinates, confidence);
+- paused-frame inspection with stable landmarks and angle;
+- live camera input using the same pose pipeline;
+- unit tests for deterministic geometry;
+- at least five representative regression fixture frames.
 
 ### Explicitly forbidden
-- camera implementation beyond a nonfunctional placeholder if required for layout;
-- MediaPipe integration;
-- angle calculations;
-- IndexedDB/session persistence;
-- SeekrFlow;
-- RAG;
-- dashboard charts;
-- user accounts or cloud backend.
+- SeekrFlow / LLM inference / RAG / coaching agents;
+- natural-language coaching;
+- normative bike-fit judgment (green/yellow/red scoring);
+- multiple biomechanics metrics beyond knee angle;
+- temporal/drift analysis;
+- session recording or IndexedDB persistence;
+- longitudinal history or cloud backend;
+- authentication or account management;
+- dashboards or charts;
+- smoothing or filtering;
+- placeholder implementations for future-phase features.
 
 ### Exit gate
-- clean install works;
-- development server runs;
-- production build succeeds;
-- lint/type checks pass;
-- test harness executes at least one trivial test;
-- no later-phase dependencies were introduced without current need.
+- prerecorded side-profile cycling video plays with continuous pose detection;
+- skeleton overlay visibly tracks the rider;
+- pose confidence is exposed and inspectable;
+- hip, knee, and ankle landmarks are available for inspection;
+- knee angle is calculated deterministically and visibly changes through pedal stroke;
+- low-confidence landmarks suppress or qualify the calculated result;
+- paused frame can be inspected with stable landmarks and angle;
+- at least five representative frames captured as regression fixtures;
+- same pipeline operates from a live camera source;
+- rendering FPS and inference FPS are visible;
+- one simple feedback component consumes the derived measurement;
+- no later-phase functionality has been implemented.
 
 ---
 

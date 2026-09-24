@@ -1,32 +1,26 @@
-# React + TypeScript + Vite
+# xCycleForm
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Camera-based cycling biomechanics coach. Phase-gated product demo of deterministic measurement + evidence-backed SeekrFlow coaching.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev       # start dev server
+npm test          # run test suite
+npm run lint      # oxlint + tsc type checking
+npm run build     # production build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## External dependencies
+
+The MediaPipe Pose Landmarker WASM runtime and model file are loaded from remote CDNs at runtime:
+
+- WASM: `cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm`
+- Model: `storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`
+
+An internet connection is required for pose estimation to function. The model is cached by the browser after first load.
+
+## Current phase
+
+**Phase 0: Visual Pipeline Validation.** See `docs/PROJECT_STATE.md` for authorization status and `docs/PHASE_PLAN.md` for scope.

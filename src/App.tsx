@@ -10,8 +10,6 @@ import { CYCLING_LANDMARKS } from './lib/landmarks'
 type InputMode = 'video' | 'camera'
 
 const CONFIDENCE_THRESHOLD = 0.65
-const KNEE_REF_MIN = 70
-const KNEE_REF_MAX = 150
 const STEP_INCREMENT = 1 / 30
 
 function App() {
@@ -197,8 +195,6 @@ function App() {
           <KneeAngleDisplay
             result={kneeAngle}
             side={activeSide}
-            referenceMin={KNEE_REF_MIN}
-            referenceMax={KNEE_REF_MAX}
           />
           <ConfidencePanel landmarks={landmarks} confidenceThreshold={CONFIDENCE_THRESHOLD} />
           <DebugPanel

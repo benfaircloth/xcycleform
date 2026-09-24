@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PoseLandmark, PoseResult } from '../lib/pose-adapter'
-import { detectPose, destroyPoseLandmarker, initPoseLandmarker } from '../lib/pose-adapter'
+import { detectForImage, detectPose, destroyPoseLandmarker, initPoseLandmarker } from '../lib/pose-adapter'
 import { CYCLING_LANDMARKS } from '../lib/landmarks'
 import { computeKneeAngle, type KneeAngleResult } from '../lib/geometry'
 import type { PoseLandmarker } from '@mediapipe/tasks-vision'
@@ -38,6 +38,7 @@ export function usePoseLoop(
   const lastTimestampRef = useRef<number>(-1)
   const renderFrameTimesRef = useRef<number[]>([])
   const inferenceFrameTimesRef = useRef<number[]>([])
+  const processFrameRef = useRef<() => void>(() => {})
 
   useEffect(() => {
     let cancelled = false
@@ -58,43 +59,55 @@ export function usePoseLoop(
     }
   }, [])
 
-  const processFrame = useCallback(() => {
-    const video = videoRef.current
-    const landmarker = landmarkerRef.current
-    if (!video || !landmarker || video.paused || video.ended) return
+  useEffect(() => {
+    processFrameRef.current = () => {
+      const video = videoRef.current
+      const landmarker = landmarkerRef.current
+      if (!video || !landmarker || video.paused || video.ended) return
 
-    const now = performance.now()
-    renderFrameTimesRef.current.push(now)
-    const oneSecAgo = now - 1000
-    renderFrameTimesRef.current = renderFrameTimesRef.current.filter((t) => t > oneSecAgo)
+      const now = performance.now()
+      renderFrameTimesRef.current.push(now)
+      const oneSecAgo = now - 1000
+      renderFrameTimesRef.current = renderFrameTimesRef.current.filter((t) => t > oneSecAgo)
 
-    const currentTimeMs = video.currentTime * 1000
+      const currentTimeMs = video.currentTime * 1000
 
-    if (currentTimeMs !== lastTimestampRef.current && currentTimeMs > 0) {
-      lastTimestampRef.current = currentTimeMs
+      if (currentTimeMs !== lastTimestampRef.current && currentTimeMs > 0) {
+        lastTimestampRef.current = currentTimeMs
 
-      const result = detectPose(landmarker, video, Math.round(currentTimeMs))
+        const result = detectPose(landmarker, video, Math.round(currentTimeMs))
 
-      if (result) {
         inferenceFrameTimesRef.current.push(now)
         inferenceFrameTimesRef.current = inferenceFrameTimesRef.current.filter((t) => t > oneSecAgo)
 
-        const kneeAngleLeft = computeKneeAngleFromResult(result, 'left', confidenceThreshold)
-        const kneeAngleRight = computeKneeAngleFromResult(result, 'right', confidenceThreshold)
+        if (result) {
+          const kneeAngleLeft = computeKneeAngleFromResult(result, 'left', confidenceThreshold)
+          const kneeAngleRight = computeKneeAngleFromResult(result, 'right', confidenceThreshold)
 
-        setState((s) => ({
-          ...s,
-          landmarks: result.landmarks,
-          kneeAngleLeft,
-          kneeAngleRight,
-          renderFps: renderFrameTimesRef.current.length,
-          inferenceFps: inferenceFrameTimesRef.current.length,
-          inferenceLatency: result.inferenceLatencyMs,
-        }))
+          setState((s) => ({
+            ...s,
+            landmarks: result.landmarks,
+            kneeAngleLeft,
+            kneeAngleRight,
+            renderFps: renderFrameTimesRef.current.length,
+            inferenceFps: inferenceFrameTimesRef.current.length,
+            inferenceLatency: result.inferenceLatencyMs,
+          }))
+        } else {
+          setState((s) => ({
+            ...s,
+            landmarks: null,
+            kneeAngleLeft: null,
+            kneeAngleRight: null,
+            renderFps: renderFrameTimesRef.current.length,
+            inferenceFps: inferenceFrameTimesRef.current.length,
+            inferenceLatency: 0,
+          }))
+        }
       }
-    }
 
-    animFrameRef.current = requestAnimationFrame(processFrame)
+      animFrameRef.current = requestAnimationFrame(() => processFrameRef.current())
+    }
   }, [videoRef, confidenceThreshold])
 
   const runSingleFrame = useCallback(() => {
@@ -106,7 +119,7 @@ export function usePoseLoop(
     if (currentTimeMs <= 0) return
 
     lastTimestampRef.current = currentTimeMs
-    const result = detectPose(landmarker, video, Math.round(currentTimeMs))
+    const result = detectForImage(landmarker, video)
 
     if (result) {
       const kneeAngleLeft = computeKneeAngleFromResult(result, 'left', confidenceThreshold)
@@ -119,19 +132,27 @@ export function usePoseLoop(
         kneeAngleRight,
         inferenceLatency: result.inferenceLatencyMs,
       }))
+    } else {
+      setState((s) => ({
+        ...s,
+        landmarks: null,
+        kneeAngleLeft: null,
+        kneeAngleRight: null,
+        inferenceLatency: 0,
+      }))
     }
   }, [videoRef, confidenceThreshold])
 
   useEffect(() => {
     if (isPlaying && state.isModelLoaded) {
-      animFrameRef.current = requestAnimationFrame(processFrame)
+      animFrameRef.current = requestAnimationFrame(() => processFrameRef.current())
     }
     return () => {
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current)
       }
     }
-  }, [isPlaying, state.isModelLoaded, processFrame])
+  }, [isPlaying, state.isModelLoaded])
 
   useEffect(() => {
     return () => {

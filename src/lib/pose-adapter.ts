@@ -83,6 +83,51 @@ export function detectPose(
   }
 }
 
+/**
+ * Detect pose on a single frame using IMAGE mode.
+ * Safe for paused-frame inspection: no temporal state, works after backward seeks.
+ */
+export function detectForImage(
+  landmarker: PoseLandmarker,
+  videoElement: HTMLVideoElement,
+): PoseResult | null {
+  const start = performance.now()
+
+  landmarker.setOptions({ runningMode: 'IMAGE' })
+  const result = landmarker.detect(videoElement)
+  landmarker.setOptions({ runningMode: 'VIDEO' })
+
+  const inferenceLatencyMs = performance.now() - start
+
+  if (!result.landmarks || result.landmarks.length === 0) {
+    return null
+  }
+
+  const landmarks: PoseLandmark[] = result.landmarks[0].map((lm) => ({
+    x: lm.x,
+    y: lm.y,
+    z: lm.z,
+    visibility: lm.visibility ?? 0,
+  }))
+
+  const worldLandmarks: PoseLandmark[] =
+    result.worldLandmarks && result.worldLandmarks.length > 0
+      ? result.worldLandmarks[0].map((lm) => ({
+          x: lm.x,
+          y: lm.y,
+          z: lm.z,
+          visibility: lm.visibility ?? 0,
+        }))
+      : []
+
+  return {
+    landmarks,
+    worldLandmarks,
+    timestampMs: videoElement.currentTime * 1000,
+    inferenceLatencyMs,
+  }
+}
+
 export function destroyPoseLandmarker(): void {
   if (landmarkerInstance) {
     landmarkerInstance.close()

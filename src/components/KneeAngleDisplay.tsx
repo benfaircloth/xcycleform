@@ -3,31 +3,24 @@ import type { KneeAngleResult } from '../lib/geometry'
 interface KneeAngleDisplayProps {
   result: KneeAngleResult | null
   side: 'left' | 'right'
-  referenceMin: number
-  referenceMax: number
 }
 
-export function KneeAngleDisplay({
-  result,
-  side,
-  referenceMin,
-  referenceMax,
-}: KneeAngleDisplayProps) {
+export function KneeAngleDisplay({ result, side }: KneeAngleDisplayProps) {
   const label = side === 'left' ? 'L Knee Angle' : 'R Knee Angle'
 
   if (!result) {
     return (
       <div className="panel knee-angle-panel">
         <h3>{label}</h3>
-        <p className="no-data">No pose detected</p>
+        <p className="no-data">Pose unavailable</p>
       </div>
     )
   }
 
   const { angle, status, reason } = result
 
-  let statusColor = '#4ade80'
-  let statusText = ''
+  let statusColor: string
+  let statusText: string
 
   if (status === 'unavailable') {
     statusColor = '#f87171'
@@ -35,13 +28,9 @@ export function KneeAngleDisplay({
   } else if (status === 'low_confidence') {
     statusColor = '#fbbf24'
     statusText = 'Low confidence'
-  } else if (angle !== null) {
-    if (angle >= referenceMin && angle <= referenceMax) {
-      statusText = 'Within reference range'
-    } else {
-      statusColor = '#fb923c'
-      statusText = 'Outside reference envelope'
-    }
+  } else {
+    statusColor = '#4ade80'
+    statusText = 'Valid'
   }
 
   return (
@@ -56,11 +45,8 @@ export function KneeAngleDisplay({
           --
         </div>
       )}
-      <div className="reference-info">
-        Reference: {referenceMin}&ndash;{referenceMax}&deg;
-      </div>
-      <div className="angle-status" style={{ color: statusColor }}>
-        {statusText}
+      <div className="angle-status">
+        Measurement: <span style={{ color: statusColor }}>{statusText}</span>
       </div>
       {reason && <div className="angle-reason">{reason}</div>}
     </div>
