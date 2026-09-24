@@ -1,0 +1,50 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #e0e0e0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.app-header {
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  margin: 0;
+  color: #ffffff;
+}
+
+.app-subtitle {
+  margin: 0.5rem 0 0;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.status-card {
+  background: #1e1e2e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.status-card p {
+  margin: 0.5rem 0;
+}
+
+.status-detail {
+  color: #888;
+  font-size: 0.85rem;
+}

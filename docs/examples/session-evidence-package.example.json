@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "0.1.0",
+  "sessionId": "demo-session-001",
+  "startedAt": "2026-09-24T10:00:00Z",
+  "durationMs": 3600000,
+  "activityContext": {
+    "sport": "cycling",
+    "environment": "indoor_trainer",
+    "riderView": "right_side",
+    "optionalMetadata": {
+      "sessionType": "endurance"
+    }
+  },
+  "system": {
+    "poseModel": "mediapipe-pose",
+    "measurementEngineVersion": "0.1.0",
+    "temporalAnalyzerVersion": "0.1.0"
+  },
+  "quality": {
+    "overallStatus": "good",
+    "poseCoveragePct": 96.8,
+    "validMeasurementPctByMetric": {
+      "torso_angle": 95.2,
+      "knee_angle": 93.7
+    },
+    "majorFlags": [],
+    "cameraSetupFlags": []
+  },
+  "metrics": [
+    {
+      "metricId": "torso_angle",
+      "metricVersion": "0.1.0",
+      "unit": "deg",
+      "validPct": 95.2,
+      "baseline": 38.2,
+      "mean": 39.4,
+      "median": 38.9,
+      "min": 36.7,
+      "max": 45.5,
+      "p10": 37.4,
+      "p90": 43.8,
+      "trend": 3.1,
+      "qualityFlags": []
+    }
+  ],
+  "events": [
+    {
+      "eventId": "evt-001",
+      "eventType": "metric_drift",
+      "metricId": "torso_angle",
+      "startMs": 2820000,
+      "endMs": 3240000,
+      "baselineValue": 38.2,
+      "observedValue": 44.9,
+      "delta": 6.7,
+      "unit": "deg",
+      "durationMs": 420000,
+      "confidence": 0.94,
+      "persistence": 0.68,
+      "qualityFlags": [],
+      "evidenceRefs": ["sample-evt-001"],
+      "algorithmVersion": "0.1.0"
+    }
+  ],
+  "samples": [
+    {
+      "evidenceRef": "sample-evt-001",
+      "metricId": "torso_angle",
+      "startMs": 2820000,
+      "endMs": 3240000,
+      "values": [
+        {"timestampMs": 2820000, "value": 39.1, "confidence": 0.95},
+        {"timestampMs": 3000000, "value": 42.3, "confidence": 0.94},
+        {"timestampMs": 3240000, "value": 44.9, "confidence": 0.93}
+      ]
+    }
+  ]
+}

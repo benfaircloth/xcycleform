@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "0.1.0",
+  "sessionId": "demo-session-001",
+  "overallConfidence": "moderate",
+  "summary": "A sustained torso-angle change appeared late in the session. The measurement was reliable enough to discuss, but one ride is not sufficient to justify a bike-fit change.",
+  "findings": [
+    {
+      "findingId": "finding-001",
+      "observation": "From 47:00 to 54:00, torso angle increased by 6.7 degrees relative to the session baseline, with event confidence 0.94.",
+      "observationEvidenceRefs": ["evt-001", "sample-evt-001"],
+      "interpretation": "This is a sustained late-session postural drift. Fatigue-related postural change is one possible explanation, but the session does not establish the cause.",
+      "interpretationQualifier": "possible explanation, not a causal determination",
+      "sourceClaimRefs": ["claim-example-001"],
+      "recommendation": "Monitor whether the same drift appears at a similar point in the next two or three comparable rides before considering a fit adjustment.",
+      "recommendationType": "monitor",
+      "confidence": "moderate",
+      "limitations": [
+        "single session",
+        "2D monocular measurement",
+        "no direct measurement of fatigue or pelvic motion"
+      ]
+    }
+  ],
+  "abstentions": [
+    {
+      "topic": "saddle-height adjustment",
+      "reason": "The observed torso drift does not by itself establish that saddle height is incorrect.",
+      "missingOrWeakEvidence": [
+        "repeated comparable sessions",
+        "fit-specific evidence linking this event to saddle height",
+        "validated measurement of relevant compensatory motion"
+      ]
+    }
+  ]
+}
