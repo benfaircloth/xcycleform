@@ -2,49 +2,229 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
   color: #e0e0e0;
   font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
 }
 
+/* Header */
 .app-header {
-  padding: 2rem;
-  text-align: center;
+  padding: 0.75rem 1rem;
+  background: #16161e;
+  border-bottom: 1px solid #2a2a3a;
 }
 
 .app-header h1 {
-  font-size: 2rem;
-  margin: 0;
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
   color: #ffffff;
 }
 
-.app-subtitle {
-  margin: 0.5rem 0 0;
-  color: #888;
-  font-size: 0.9rem;
+.controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
+.controls-bar button,
+.file-input-label {
+  padding: 0.35rem 0.75rem;
+  background: #2a2a3a;
+  border: 1px solid #3a3a4a;
+  border-radius: 4px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.controls-bar button:hover,
+.file-input-label:hover {
+  background: #3a3a4a;
+}
+
+.file-input-label input {
+  display: none;
+}
+
+.side-toggle {
+  display: flex;
+  border: 1px solid #3a3a4a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.side-toggle button {
+  border: none;
+  border-radius: 0;
+  padding: 0.35rem 0.6rem;
+}
+
+.side-toggle button.active {
+  background: #4a4a6a;
+  color: #fff;
+}
+
+.model-status {
+  color: #888;
+  font-size: 0.75rem;
+  margin-left: auto;
+}
+
+/* Main layout */
 .app-main {
   flex: 1;
   display: flex;
-  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+/* Video section */
+.video-section {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.video-container {
+  position: relative;
+  background: #000;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+  max-height: calc(100vh - 150px);
+}
+
+.video-container video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.frame-controls {
+  display: flex;
+  gap: 0.5rem;
   justify-content: center;
-  padding: 2rem;
 }
 
-.status-card {
-  background: #1e1e2e;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 2rem;
-  text-align: center;
+.frame-controls button {
+  padding: 0.3rem 0.75rem;
+  background: #2a2a3a;
+  border: 1px solid #3a3a4a;
+  border-radius: 4px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 0.8rem;
 }
 
-.status-card p {
-  margin: 0.5rem 0;
+.frame-controls button:hover {
+  background: #3a3a4a;
 }
 
-.status-detail {
+/* Side panels */
+.panels {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 100px);
+}
+
+.panel {
+  background: #1a1a2a;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.panel h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
   color: #888;
-  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.panel h4 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.no-data {
+  color: #555;
+  font-size: 0.8rem;
+}
+
+/* Knee angle */
+.angle-value {
+  font-size: 2rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.reference-info {
+  color: #666;
+  font-size: 0.75rem;
+  margin: 0.25rem 0;
+}
+
+.angle-status {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.angle-reason {
+  color: #888;
+  font-size: 0.7rem;
+  margin-top: 0.25rem;
+}
+
+/* Confidence */
+.confidence-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.confidence-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.landmark-name {
+  color: #999;
+}
+
+.confidence-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* Debug panel */
+.debug-section {
+  margin-bottom: 0.5rem;
+}
+
+.debug-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  padding: 0.1rem 0;
+}
+
+.debug-row span:first-child {
+  color: #777;
+}
+
+.debug-row span:last-child {
+  font-variant-numeric: tabular-nums;
+  color: #bbb;
 }
