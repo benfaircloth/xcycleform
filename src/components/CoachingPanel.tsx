@@ -43,10 +43,15 @@ export function CoachingPanel({ buffer, onClear }: CoachingPanelProps) {
     <div className="panel coaching-panel">
       <h3>Coaching</h3>
 
+      <div className="coaching-stats">
+        <span>{buffer.sampleCount} samples</span>
+        <span>{buffer.cycleCount} cycles</span>
+        {buffer.currentCadence !== null && (
+          <span>{Math.round(buffer.currentCadence)} rpm</span>
+        )}
+      </div>
+
       <div className="coaching-controls">
-        <div className="coaching-sample-count">
-          {buffer.sampleCount} samples collected
-        </div>
         <button
           type="button"
           className="coaching-btn"

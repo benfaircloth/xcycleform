@@ -1,4 +1,5 @@
 import type { KneeAngleResult } from './geometry'
+import { PedalStrokeDetector, type PedalStrokeCycle } from './pedal-stroke-detector'
 
 const PLAUSIBLE_MIN_ANGLE = 30
 const PLAUSIBLE_MAX_ANGLE = 170
@@ -8,6 +9,15 @@ export interface AngleSample {
   angle: number
   status: 'valid' | 'low_confidence'
   confidence: { hip: number; knee: number; ankle: number }
+}
+
+export interface CycleSummary {
+  count: number
+  avgBdcAngle: number
+  avgTdcAngle: number
+  avgRom: number
+  avgCadenceRpm: number
+  cycles: PedalStrokeCycle[]
 }
 
 export interface SessionSummary {
@@ -24,6 +34,7 @@ export interface SessionSummary {
     mean: number
     range: number
   } | null
+  pedalStrokes: CycleSummary | null
   samples: AngleSample[]
 }
 
@@ -34,6 +45,7 @@ export class MeasurementBuffer {
   private startTimeS: number | null = null
   private endTimeS: number | null = null
   private side: 'left' | 'right' = 'left'
+  private detector = new PedalStrokeDetector()
 
   setSide(side: 'left' | 'right') {
     this.side = side
@@ -63,6 +75,8 @@ export class MeasurementBuffer {
         ankle: result.ankleConfidence,
       },
     })
+
+    this.detector.push(result.angle, timestampS)
   }
 
   clear() {
@@ -71,10 +85,19 @@ export class MeasurementBuffer {
     this.discardedCount = 0
     this.startTimeS = null
     this.endTimeS = null
+    this.detector.clear()
   }
 
   get sampleCount() {
     return this.samples.length
+  }
+
+  get cycleCount() {
+    return this.detector.cycleCount
+  }
+
+  get currentCadence() {
+    return this.detector.currentCadence
   }
 
   summarize(): SessionSummary {
@@ -90,6 +113,19 @@ export class MeasurementBuffer {
       angleStats = { min, max, mean, range: max - min }
     }
 
+    const cycles = this.detector.cycles
+    let pedalStrokes: CycleSummary | null = null
+    if (cycles.length > 0) {
+      pedalStrokes = {
+        count: cycles.length,
+        avgBdcAngle: cycles.reduce((s, c) => s + c.bdcAngle, 0) / cycles.length,
+        avgTdcAngle: cycles.reduce((s, c) => s + c.tdcAngle, 0) / cycles.length,
+        avgRom: cycles.reduce((s, c) => s + c.rom, 0) / cycles.length,
+        avgCadenceRpm: cycles.reduce((s, c) => s + c.cadenceRpm, 0) / cycles.length,
+        cycles: [...cycles],
+      }
+    }
+
     return {
       side: this.side,
       durationS: this.startTimeS !== null && this.endTimeS !== null
@@ -101,6 +137,7 @@ export class MeasurementBuffer {
       unavailableFrames: this.unavailableCount,
       discardedFrames: this.discardedCount,
       angleStats,
+      pedalStrokes,
       samples: this.samples,
     }
   }

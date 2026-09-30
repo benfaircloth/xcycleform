@@ -256,6 +256,15 @@
 }
 
 /* Coaching panel */
+.coaching-stats {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .coaching-controls {
   display: flex;
   align-items: center;
