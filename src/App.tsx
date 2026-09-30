@@ -50,6 +50,10 @@ function App() {
       : [CYCLING_LANDMARKS.RIGHT_HIP, CYCLING_LANDMARKS.RIGHT_KNEE, CYCLING_LANDMARKS.RIGHT_ANKLE]
 
   useEffect(() => {
+    measurementBuffer.setVideoElement(videoRef.current)
+  }, [videoRef.current])
+
+  useEffect(() => {
     measurementBuffer.setSide(activeSide)
   }, [activeSide])
 

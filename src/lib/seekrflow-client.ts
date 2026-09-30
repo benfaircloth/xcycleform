@@ -1,11 +1,11 @@
-import type { SessionSummary } from './measurement-buffer'
+import type { CapturedFrame, SessionSummary } from './measurement-buffer'
 
 const API_KEY = import.meta.env.VITE_SEEKR_API_KEY as string
-const MODEL = (import.meta.env.VITE_SEEKR_MODEL as string) || 'meta-llama/Llama-3.3-70B-Instruct'
+const MODEL = (import.meta.env.VITE_SEEKR_MODEL as string) || 'Qwen/Qwen2.5-VL-32B-Instruct'
 
-const SYSTEM_PROMPT = `You are a cycling biomechanics coach. You analyze knee angle measurements captured from video of a cyclist on a trainer or road bike.
+const SYSTEM_PROMPT = `You are a cycling biomechanics coach. You analyze knee angle measurements and video frames captured from a cyclist on a trainer or road bike.
 
-You will receive structured data including per-pedal-stroke cycle analysis with BDC (bottom dead center) and TDC (top dead center) angles. Your job is to interpret the data and provide actionable coaching.
+You will receive structured per-pedal-stroke data with BDC (bottom dead center) and TDC (top dead center) angles, plus key video frames captured at those moments. Your job is to interpret both the numbers and what you see in the frames to provide actionable coaching.
 
 Key biomechanics reference points for knee angle (measured as the interior angle at the knee between hip-knee-ankle):
 - At BDC (leg most extended): optimal range is 140-150 degrees. Below 135 suggests saddle too low. Above 155 suggests saddle too high.
@@ -14,14 +14,24 @@ Key biomechanics reference points for knee angle (measured as the interior angle
 - Cadence for steady riding is typically 80-100 RPM; below 60 may indicate high gear or low effort.
 - These ranges come from established bike fitting methodology (Retul, BIKEFIT, IBFI).
 
+Important: The knee angle is measured from a 2D side-view camera using pose estimation landmarks. The hip landmark is at the greater trochanter, not the true hip joint center, which can inflate the measured angle by 10-15 degrees. Account for this systematic bias when interpreting numbers near reference boundaries.
+
+When analyzing video frames:
+- Look at hand/wrist placement on the handlebars (drops, hoods, tops).
+- Assess elbow bend and arm tension.
+- Evaluate trunk angle and back flatness.
+- Note head/neck position.
+- Check for lateral sway or asymmetry if visible.
+- Observe ankle angle and foot position on the pedals.
+- Note any visible equipment issues (saddle tilt, cleat position if visible).
+
 When interpreting:
-- Prioritize the per-cycle BDC/TDC data over raw aggregate statistics. The per-cycle data is the primary evidence.
-- Report what the numbers show before making recommendations.
-- Compare actual values to reference ranges with specific numbers (e.g., "BDC avg 156° is 6° above the 150° upper bound").
-- If cycle-to-cycle variation is high, note inconsistency as a separate finding.
-- Qualify confidence: if many frames had low confidence, were unavailable, or were discarded, note that data quality limits conclusions.
-- Be specific about what adjustments to try and expected magnitude (e.g., "lower saddle 5-10mm").
-- If the data is insufficient to draw conclusions, say so. Do not speculate beyond what the measurements support.`
+- Prioritize the per-cycle BDC/TDC data over raw aggregate statistics.
+- Report what the numbers and images show before making recommendations.
+- Compare actual values to reference ranges with specific numbers.
+- Acknowledge the 2D measurement bias when readings are near boundaries.
+- Be specific about what adjustments to try and expected magnitude.
+- If the data or images are insufficient, say so.`
 
 export interface CoachingResponse {
   content: string
@@ -34,7 +44,7 @@ export async function getCoaching(summary: SessionSummary): Promise<CoachingResp
     throw new Error('VITE_SEEKR_API_KEY not set. Add it to .env file.')
   }
 
-  const userMessage = formatSummaryForLLM(summary)
+  const userContent = buildUserContent(summary)
 
   const response = await fetch('/api/seekrflow/inference/chat/completions', {
     method: 'POST',
@@ -46,10 +56,10 @@ export async function getCoaching(summary: SessionSummary): Promise<CoachingResp
       model: MODEL,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userMessage },
+        { role: 'user', content: userContent },
       ],
       temperature: 0.3,
-      max_tokens: 1024,
+      max_tokens: 1500,
     }),
   })
 
@@ -68,7 +78,66 @@ export async function getCoaching(summary: SessionSummary): Promise<CoachingResp
   }
 }
 
-function formatSummaryForLLM(summary: SessionSummary): string {
+type ContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } }
+
+function buildUserContent(summary: SessionSummary): ContentPart[] | string {
+  const textParts = formatSummaryText(summary)
+
+  if (summary.capturedFrames.length === 0) {
+    return textParts
+  }
+
+  const parts: ContentPart[] = []
+  parts.push({ type: 'text', text: textParts })
+
+  const bdcFrames = summary.capturedFrames.filter((f) => f.type === 'bdc')
+  const tdcFrames = summary.capturedFrames.filter((f) => f.type === 'tdc')
+
+  if (bdcFrames.length > 0) {
+    parts.push({
+      type: 'text',
+      text: `\n## BDC Frames (leg most extended)\nThe following ${bdcFrames.length} frame(s) were captured at bottom dead center:`,
+    })
+    for (const frame of bdcFrames) {
+      parts.push({
+        type: 'text',
+        text: `BDC at ${frame.timestampS.toFixed(2)}s, knee angle: ${frame.angle.toFixed(1)}°`,
+      })
+      parts.push({
+        type: 'image_url',
+        image_url: { url: frame.dataUrl },
+      })
+    }
+  }
+
+  if (tdcFrames.length > 0) {
+    parts.push({
+      type: 'text',
+      text: `\n## TDC Frames (leg most flexed)\nThe following ${tdcFrames.length} frame(s) were captured at top dead center:`,
+    })
+    for (const frame of tdcFrames) {
+      parts.push({
+        type: 'text',
+        text: `TDC at ${frame.timestampS.toFixed(2)}s, knee angle: ${frame.angle.toFixed(1)}°`,
+      })
+      parts.push({
+        type: 'image_url',
+        image_url: { url: frame.dataUrl },
+      })
+    }
+  }
+
+  parts.push({
+    type: 'text',
+    text: '\nPlease interpret the measurements and video frames together to provide coaching recommendations.',
+  })
+
+  return parts
+}
+
+function formatSummaryText(summary: SessionSummary): string {
   const parts: string[] = []
 
   parts.push(`## Session Measurement Summary`)
@@ -105,23 +174,5 @@ function formatSummaryForLLM(summary: SessionSummary): string {
     parts.push(`- Range: ${summary.angleStats.range.toFixed(1)}°`)
   }
 
-  if (!summary.pedalStrokes && summary.samples.length > 0) {
-    const sampledPoints = downsample(summary.samples, 20)
-    parts.push(`\n## Sample readings (${sampledPoints.length} of ${summary.samples.length} frames)`)
-    parts.push(`| Time (s) | Angle (°) | Status |`)
-    parts.push(`|----------|-----------|--------|`)
-    for (const s of sampledPoints) {
-      parts.push(`| ${s.timestampS.toFixed(2)} | ${s.angle.toFixed(1)} | ${s.status} |`)
-    }
-  }
-
-  parts.push(`\nPlease interpret these measurements and provide coaching recommendations.`)
-
   return parts.join('\n')
-}
-
-function downsample<T>(arr: T[], n: number): T[] {
-  if (arr.length <= n) return arr
-  const step = (arr.length - 1) / (n - 1)
-  return Array.from({ length: n }, (_, i) => arr[Math.round(i * step)])
 }

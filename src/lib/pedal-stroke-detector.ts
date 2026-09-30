@@ -19,12 +19,16 @@ const HYSTERESIS_DEG = 15
 const MIN_CYCLE_DURATION_S = 0.3
 const MAX_CYCLE_DURATION_S = 4.0
 
+export type StrokeEventType = 'bdc' | 'tdc'
+export type StrokeEventCallback = (type: StrokeEventType, timestampS: number, angle: number) => void
+
 export class PedalStrokeDetector {
   private direction: Direction = 'unknown'
   private runningMax: Extremum | null = null
   private runningMin: Extremum | null = null
   private lastTdc: Extremum | null = null
   private _cycles: PedalStrokeCycle[] = []
+  onEvent: StrokeEventCallback | null = null
 
   get cycles(): readonly PedalStrokeCycle[] {
     return this._cycles
@@ -76,12 +80,14 @@ export class PedalStrokeDetector {
 
     if (this.direction === 'rising') {
       if (this.runningMax.angle - angle >= HYSTERESIS_DEG) {
+        this.onEvent?.('bdc', this.runningMax.timestampS, this.runningMax.angle)
         this.onBdc(this.runningMax)
         this.direction = 'falling'
         this.runningMin = { angle, timestampS }
       }
     } else if (this.direction === 'falling') {
       if (angle - this.runningMin.angle >= HYSTERESIS_DEG) {
+        this.onEvent?.('tdc', this.runningMin.timestampS, this.runningMin.angle)
         this.onTdc(this.runningMin)
         this.direction = 'rising'
         this.runningMax = { angle, timestampS }

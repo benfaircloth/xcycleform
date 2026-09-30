@@ -1,14 +1,23 @@
 import type { KneeAngleResult } from './geometry'
-import { PedalStrokeDetector, type PedalStrokeCycle } from './pedal-stroke-detector'
+import { captureFrame } from './frame-capture'
+import { PedalStrokeDetector, type PedalStrokeCycle, type StrokeEventType } from './pedal-stroke-detector'
 
 const PLAUSIBLE_MIN_ANGLE = 30
 const PLAUSIBLE_MAX_ANGLE = 170
+const MAX_CAPTURES_PER_TYPE = 3
 
 export interface AngleSample {
   timestampS: number
   angle: number
   status: 'valid' | 'low_confidence'
   confidence: { hip: number; knee: number; ankle: number }
+}
+
+export interface CapturedFrame {
+  type: StrokeEventType
+  timestampS: number
+  angle: number
+  dataUrl: string
 }
 
 export interface CycleSummary {
@@ -35,6 +44,7 @@ export interface SessionSummary {
     range: number
   } | null
   pedalStrokes: CycleSummary | null
+  capturedFrames: CapturedFrame[]
   samples: AngleSample[]
 }
 
@@ -46,6 +56,20 @@ export class MeasurementBuffer {
   private endTimeS: number | null = null
   private side: 'left' | 'right' = 'left'
   private detector = new PedalStrokeDetector()
+  private _capturedFrames: CapturedFrame[] = []
+  private bdcCaptureCount = 0
+  private tdcCaptureCount = 0
+  private videoElement: HTMLVideoElement | null = null
+
+  constructor() {
+    this.detector.onEvent = (type, timestampS, angle) => {
+      this.onStrokeEvent(type, timestampS, angle)
+    }
+  }
+
+  setVideoElement(el: HTMLVideoElement | null) {
+    this.videoElement = el
+  }
 
   setSide(side: 'left' | 'right') {
     this.side = side
@@ -79,6 +103,36 @@ export class MeasurementBuffer {
     this.detector.push(result.angle, timestampS)
   }
 
+  private onStrokeEvent(type: StrokeEventType, timestampS: number, angle: number) {
+    if (!this.videoElement) return
+
+    const dataUrl = captureFrame(this.videoElement)
+    if (!dataUrl) return
+
+    const frame: CapturedFrame = { type, timestampS, angle, dataUrl }
+    const count = type === 'bdc' ? this.bdcCaptureCount : this.tdcCaptureCount
+
+    if (count < MAX_CAPTURES_PER_TYPE) {
+      this._capturedFrames.push(frame)
+    } else {
+      // Slots: [0]=first (locked), [1]=middle (tracks temporal midpoint), [2]=last (always latest)
+      const slots = this.slotsForType(type)
+      const midTime = (slots[0].timestampS + timestampS) / 2
+      // Before overwriting last, check if it's a better midpoint candidate
+      if (Math.abs(slots[2].timestampS - midTime) < Math.abs(slots[1].timestampS - midTime)) {
+        Object.assign(slots[1], slots[2])
+      }
+      Object.assign(slots[2], frame)
+    }
+
+    if (type === 'bdc') this.bdcCaptureCount++
+    else this.tdcCaptureCount++
+  }
+
+  private slotsForType(type: StrokeEventType): CapturedFrame[] {
+    return this._capturedFrames.filter((f) => f.type === type)
+  }
+
   clear() {
     this.samples = []
     this.unavailableCount = 0
@@ -86,6 +140,9 @@ export class MeasurementBuffer {
     this.startTimeS = null
     this.endTimeS = null
     this.detector.clear()
+    this._capturedFrames = []
+    this.bdcCaptureCount = 0
+    this.tdcCaptureCount = 0
   }
 
   get sampleCount() {
@@ -98,6 +155,10 @@ export class MeasurementBuffer {
 
   get currentCadence() {
     return this.detector.currentCadence
+  }
+
+  get capturedFrameCount() {
+    return this._capturedFrames.length
   }
 
   summarize(): SessionSummary {
@@ -138,6 +199,7 @@ export class MeasurementBuffer {
       discardedFrames: this.discardedCount,
       angleStats,
       pedalStrokes,
+      capturedFrames: [...this._capturedFrames],
       samples: this.samples,
     }
   }
