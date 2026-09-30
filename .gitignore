@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Test media (video files for local validation)
+test-media/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
