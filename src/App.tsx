@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
+import { AngleHistoryPanel } from './components/AngleHistoryPanel'
+import { CadencePanel } from './components/CadencePanel'
+import { CapturedFramesPanel } from './components/CapturedFramesPanel'
 import { CoachingPanel } from './components/CoachingPanel'
 import { ConfidencePanel } from './components/ConfidencePanel'
 import { DebugPanel } from './components/DebugPanel'
@@ -201,29 +204,37 @@ function App() {
       </header>
 
       <main className="app-main">
+        <aside className="panels-left">
+          <AngleHistoryPanel />
+          <CapturedFramesPanel />
+          <CadencePanel />
+        </aside>
+
         <div className="video-section">
           <div
             ref={containerRef}
             className="video-container"
-            style={{ aspectRatio: `${videoDimensions.width} / ${videoDimensions.height}` }}
+            style={{ aspectRatio: `${videoDimensions.width * 0.6} / ${videoDimensions.height}` }}
           >
-            <video
-              ref={videoRef}
-              onLoadedMetadata={handleVideoMetadata}
-              onPlay={handlePlay}
-              onPause={handlePause}
-              controls={inputMode === 'video'}
-              playsInline
-              src={videoSrc ?? undefined}
-            />
-            <PoseOverlay
-              allPoses={allPoses}
-              selectedPoseIndex={selectedPoseIndex}
-              width={videoDimensions.width}
-              height={videoDimensions.height}
-              confidenceThreshold={CONFIDENCE_THRESHOLD}
-              highlightIndices={highlightIndices}
-            />
+            <div className="video-zoom">
+              <video
+                ref={videoRef}
+                onLoadedMetadata={handleVideoMetadata}
+                onPlay={handlePlay}
+                onPause={handlePause}
+                controls={inputMode === 'video'}
+                playsInline
+                src={videoSrc ?? undefined}
+              />
+              <PoseOverlay
+                allPoses={allPoses}
+                selectedPoseIndex={selectedPoseIndex}
+                width={videoDimensions.width}
+                height={videoDimensions.height}
+                confidenceThreshold={CONFIDENCE_THRESHOLD}
+                highlightIndices={highlightIndices}
+              />
+            </div>
           </div>
           {inputMode === 'video' && videoSrc && (
             <div className="frame-controls">
