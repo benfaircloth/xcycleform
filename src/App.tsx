@@ -1,16 +1,20 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
+import { CoachingPanel } from './components/CoachingPanel'
 import { ConfidencePanel } from './components/ConfidencePanel'
 import { DebugPanel } from './components/DebugPanel'
 import { KneeAngleDisplay } from './components/KneeAngleDisplay'
 import { PoseOverlay } from './components/PoseOverlay'
 import { usePoseLoop } from './hooks/usePoseLoop'
 import { CYCLING_LANDMARKS } from './lib/landmarks'
+import { MeasurementBuffer } from './lib/measurement-buffer'
 
 type InputMode = 'video' | 'camera'
 
 const CONFIDENCE_THRESHOLD = 0.65
 const STEP_INCREMENT = 1 / 30
+
+const measurementBuffer = new MeasurementBuffer()
 
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -20,10 +24,14 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [videoDimensions, setVideoDimensions] = useState({ width: 640, height: 480 })
   const [activeSide, setActiveSide] = useState<'left' | 'right'>('left')
+  const [, forceUpdate] = useState(0)
   const cameraStreamRef = useRef<MediaStream | null>(null)
 
   const {
+    allPoses,
     landmarks,
+    selectedPoseIndex,
+    poseCount,
     kneeAngleLeft,
     kneeAngleRight,
     renderFps,
@@ -32,6 +40,7 @@ function App() {
     isModelLoaded,
     modelError,
     runSingleFrame,
+    setSelectedPoseIndex,
   } = usePoseLoop(videoRef, isPlaying, CONFIDENCE_THRESHOLD)
 
   const kneeAngle = activeSide === 'left' ? kneeAngleLeft : kneeAngleRight
@@ -39,6 +48,17 @@ function App() {
     activeSide === 'left'
       ? [CYCLING_LANDMARKS.LEFT_HIP, CYCLING_LANDMARKS.LEFT_KNEE, CYCLING_LANDMARKS.LEFT_ANKLE]
       : [CYCLING_LANDMARKS.RIGHT_HIP, CYCLING_LANDMARKS.RIGHT_KNEE, CYCLING_LANDMARKS.RIGHT_ANKLE]
+
+  useEffect(() => {
+    measurementBuffer.setSide(activeSide)
+  }, [activeSide])
+
+  useEffect(() => {
+    if (!isPlaying) return
+    const video = videoRef.current
+    if (!video) return
+    measurementBuffer.record(video.currentTime, kneeAngle)
+  }, [kneeAngle, isPlaying])
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -59,12 +79,14 @@ function App() {
   const handlePause = useCallback(() => {
     setIsPlaying(false)
     setTimeout(() => runSingleFrame(), 50)
+    forceUpdate((n) => n + 1)
   }, [runSingleFrame])
 
   const stepFrame = useCallback(
     (direction: 1 | -1) => {
       const video = videoRef.current
-      if (!video || !video.paused) return
+      if (!video) return
+      if (!video.paused) video.pause()
       video.currentTime = Math.max(0, video.currentTime + direction * STEP_INCREMENT)
       setTimeout(() => runSingleFrame(), 100)
     },
@@ -111,6 +133,11 @@ function App() {
     setInputMode('video')
   }, [])
 
+  const handleClearBuffer = useCallback(() => {
+    measurementBuffer.clear()
+    forceUpdate((n) => n + 1)
+  }, [])
+
   return (
     <div className="app">
       <header className="app-header">
@@ -145,6 +172,20 @@ function App() {
               Right
             </button>
           </div>
+          {poseCount > 1 && (
+            <div className="person-toggle">
+              {Array.from({ length: poseCount }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={selectedPoseIndex === i ? 'active' : ''}
+                  onClick={() => setSelectedPoseIndex(i)}
+                >
+                  Person {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
           <span className="model-status">
             {modelError
               ? `Model error: ${modelError}`
@@ -172,7 +213,8 @@ function App() {
               src={videoSrc ?? undefined}
             />
             <PoseOverlay
-              landmarks={landmarks}
+              allPoses={allPoses}
+              selectedPoseIndex={selectedPoseIndex}
               width={videoDimensions.width}
               height={videoDimensions.height}
               confidenceThreshold={CONFIDENCE_THRESHOLD}
@@ -195,6 +237,10 @@ function App() {
           <KneeAngleDisplay
             result={kneeAngle}
             side={activeSide}
+          />
+          <CoachingPanel
+            buffer={measurementBuffer}
+            onClear={handleClearBuffer}
           />
           <ConfidencePanel landmarks={landmarks} confidenceThreshold={CONFIDENCE_THRESHOLD} />
           <DebugPanel

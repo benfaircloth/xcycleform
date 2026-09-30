@@ -3,6 +3,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api/seekrflow': {
+        target: 'https://flow.seekr.com/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/seekrflow/, ''),
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({

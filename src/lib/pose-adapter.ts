@@ -33,7 +33,7 @@ export async function initPoseLandmarker(): Promise<PoseLandmarker> {
         delegate: 'GPU',
       },
       runningMode: 'VIDEO',
-      numPoses: 1,
+      numPoses: 2,
     })
 
     landmarkerInstance = landmarker
@@ -47,7 +47,7 @@ export function detectPose(
   landmarker: PoseLandmarker,
   videoElement: HTMLVideoElement,
   timestampMs: number,
-): PoseResult | null {
+): PoseResult[] {
   const start = performance.now()
 
   const result = landmarker.detectForVideo(videoElement, timestampMs)
@@ -55,32 +55,26 @@ export function detectPose(
   const inferenceLatencyMs = performance.now() - start
 
   if (!result.landmarks || result.landmarks.length === 0) {
-    return null
+    return []
   }
 
-  const landmarks: PoseLandmark[] = result.landmarks[0].map((lm) => ({
-    x: lm.x,
-    y: lm.y,
-    z: lm.z,
-    visibility: lm.visibility ?? 0,
-  }))
-
-  const worldLandmarks: PoseLandmark[] =
-    result.worldLandmarks && result.worldLandmarks.length > 0
-      ? result.worldLandmarks[0].map((lm) => ({
-          x: lm.x,
-          y: lm.y,
-          z: lm.z,
-          visibility: lm.visibility ?? 0,
-        }))
-      : []
-
-  return {
-    landmarks,
-    worldLandmarks,
+  return result.landmarks.map((lms, i) => ({
+    landmarks: lms.map((lm) => ({
+      x: lm.x,
+      y: lm.y,
+      z: lm.z,
+      visibility: lm.visibility ?? 0,
+    })),
+    worldLandmarks:
+      result.worldLandmarks?.[i]?.map((lm) => ({
+        x: lm.x,
+        y: lm.y,
+        z: lm.z,
+        visibility: lm.visibility ?? 0,
+      })) ?? [],
     timestampMs,
     inferenceLatencyMs,
-  }
+  }))
 }
 
 /**
@@ -90,42 +84,36 @@ export function detectPose(
 export function detectForImage(
   landmarker: PoseLandmarker,
   videoElement: HTMLVideoElement,
-): PoseResult | null {
+): PoseResult[] {
   const start = performance.now()
 
-  landmarker.setOptions({ runningMode: 'IMAGE' })
+  landmarker.setOptions({ runningMode: 'IMAGE', numPoses: 2 })
   const result = landmarker.detect(videoElement)
-  landmarker.setOptions({ runningMode: 'VIDEO' })
+  landmarker.setOptions({ runningMode: 'VIDEO', numPoses: 2 })
 
   const inferenceLatencyMs = performance.now() - start
 
   if (!result.landmarks || result.landmarks.length === 0) {
-    return null
+    return []
   }
 
-  const landmarks: PoseLandmark[] = result.landmarks[0].map((lm) => ({
-    x: lm.x,
-    y: lm.y,
-    z: lm.z,
-    visibility: lm.visibility ?? 0,
-  }))
-
-  const worldLandmarks: PoseLandmark[] =
-    result.worldLandmarks && result.worldLandmarks.length > 0
-      ? result.worldLandmarks[0].map((lm) => ({
-          x: lm.x,
-          y: lm.y,
-          z: lm.z,
-          visibility: lm.visibility ?? 0,
-        }))
-      : []
-
-  return {
-    landmarks,
-    worldLandmarks,
+  return result.landmarks.map((lms, i) => ({
+    landmarks: lms.map((lm) => ({
+      x: lm.x,
+      y: lm.y,
+      z: lm.z,
+      visibility: lm.visibility ?? 0,
+    })),
+    worldLandmarks:
+      result.worldLandmarks?.[i]?.map((lm) => ({
+        x: lm.x,
+        y: lm.y,
+        z: lm.z,
+        visibility: lm.visibility ?? 0,
+      })) ?? [],
     timestampMs: videoElement.currentTime * 1000,
     inferenceLatencyMs,
-  }
+  }))
 }
 
 export function destroyPoseLandmarker(): void {

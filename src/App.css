@@ -65,6 +65,32 @@
   color: #fff;
 }
 
+.person-toggle {
+  display: flex;
+  border: 1px solid #3a3a4a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.person-toggle button {
+  border: none;
+  border-radius: 0;
+  padding: 0.35rem 0.6rem;
+  background: #2a2a3a;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.person-toggle button.active {
+  background: #3a6a4a;
+  color: #fff;
+}
+
+.person-toggle button:hover:not(.active) {
+  background: #3a3a4a;
+}
+
 .model-status {
   color: #888;
   font-size: 0.75rem;
@@ -227,4 +253,72 @@
 .debug-row span:last-child {
   font-variant-numeric: tabular-nums;
   color: #bbb;
+}
+
+/* Coaching panel */
+.coaching-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.coaching-sample-count {
+  font-size: 0.75rem;
+  color: #888;
+  flex: 1;
+}
+
+.coaching-btn {
+  padding: 0.35rem 0.75rem;
+  background: #2a5a3a;
+  border: 1px solid #3a7a4a;
+  border-radius: 4px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.coaching-btn:hover:not(:disabled) {
+  background: #3a7a4a;
+}
+
+.coaching-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.coaching-btn-secondary {
+  background: #2a2a3a;
+  border-color: #3a3a4a;
+}
+
+.coaching-btn-secondary:hover {
+  background: #3a3a4a;
+}
+
+.coaching-error {
+  color: #f87171;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.coaching-response {
+  margin-top: 0.25rem;
+}
+
+.coaching-content {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #d0d0d0;
+  white-space: pre-wrap;
+}
+
+.coaching-meta {
+  font-size: 0.65rem;
+  color: #555;
+  margin-top: 0.5rem;
+  border-top: 1px solid #2a2a3a;
+  padding-top: 0.25rem;
 }

@@ -6,7 +6,10 @@ import { computeKneeAngle, type KneeAngleResult } from '../lib/geometry'
 import type { PoseLandmarker } from '@mediapipe/tasks-vision'
 
 export interface PoseLoopState {
+  allPoses: PoseLandmark[][]
   landmarks: PoseLandmark[] | null
+  selectedPoseIndex: number
+  poseCount: number
   kneeAngleLeft: KneeAngleResult | null
   kneeAngleRight: KneeAngleResult | null
   renderFps: number
@@ -17,7 +20,10 @@ export interface PoseLoopState {
 }
 
 const DEFAULT_STATE: PoseLoopState = {
+  allPoses: [],
   landmarks: null,
+  selectedPoseIndex: 0,
+  poseCount: 0,
   kneeAngleLeft: null,
   kneeAngleRight: null,
   renderFps: 0,
@@ -36,6 +42,7 @@ export function usePoseLoop(
   const landmarkerRef = useRef<PoseLandmarker | null>(null)
   const animFrameRef = useRef<number>(0)
   const lastTimestampRef = useRef<number>(-1)
+  const selectedIndexRef = useRef<number>(0)
   const renderFrameTimesRef = useRef<number[]>([])
   const inferenceFrameTimesRef = useRef<number[]>([])
   const processFrameRef = useRef<() => void>(() => {})
@@ -59,6 +66,22 @@ export function usePoseLoop(
     }
   }, [])
 
+  const setSelectedPoseIndex = useCallback((index: number) => {
+    selectedIndexRef.current = index
+    setState((s) => {
+      if (index >= s.poseCount || index < 0) return s
+      const landmarks = s.allPoses[index] ?? null
+      const selectedResult = landmarks ? { landmarks, worldLandmarks: [], timestampMs: 0, inferenceLatencyMs: 0 } : null
+      return {
+        ...s,
+        selectedPoseIndex: index,
+        landmarks,
+        kneeAngleLeft: selectedResult ? computeKneeAngleFromResult(selectedResult, 'left', confidenceThreshold) : null,
+        kneeAngleRight: selectedResult ? computeKneeAngleFromResult(selectedResult, 'right', confidenceThreshold) : null,
+      }
+    })
+  }, [confidenceThreshold])
+
   useEffect(() => {
     processFrameRef.current = () => {
       const video = videoRef.current
@@ -70,32 +93,41 @@ export function usePoseLoop(
       const oneSecAgo = now - 1000
       renderFrameTimesRef.current = renderFrameTimesRef.current.filter((t) => t > oneSecAgo)
 
-      const currentTimeMs = video.currentTime * 1000
+      const currentTimeMs = Math.round(video.currentTime * 1000)
 
-      if (currentTimeMs !== lastTimestampRef.current && currentTimeMs > 0) {
+      if (currentTimeMs > lastTimestampRef.current && currentTimeMs > 0) {
         lastTimestampRef.current = currentTimeMs
 
-        const result = detectPose(landmarker, video, Math.round(currentTimeMs))
+        const results = detectPose(landmarker, video, currentTimeMs)
 
         inferenceFrameTimesRef.current.push(now)
         inferenceFrameTimesRef.current = inferenceFrameTimesRef.current.filter((t) => t > oneSecAgo)
 
-        if (result) {
-          const kneeAngleLeft = computeKneeAngleFromResult(result, 'left', confidenceThreshold)
-          const kneeAngleRight = computeKneeAngleFromResult(result, 'right', confidenceThreshold)
+        if (results.length > 0) {
+          const allPoses = results.map((r) => r.landmarks)
+          const selected = Math.min(selectedIndexRef.current, results.length - 1)
+          const selectedResult = results[selected]
+
+          const kneeAngleLeft = computeKneeAngleFromResult(selectedResult, 'left', confidenceThreshold)
+          const kneeAngleRight = computeKneeAngleFromResult(selectedResult, 'right', confidenceThreshold)
 
           setState((s) => ({
             ...s,
-            landmarks: result.landmarks,
+            allPoses,
+            poseCount: results.length,
+            selectedPoseIndex: selected,
+            landmarks: selectedResult.landmarks,
             kneeAngleLeft,
             kneeAngleRight,
             renderFps: renderFrameTimesRef.current.length,
             inferenceFps: inferenceFrameTimesRef.current.length,
-            inferenceLatency: result.inferenceLatencyMs,
+            inferenceLatency: selectedResult.inferenceLatencyMs,
           }))
         } else {
           setState((s) => ({
             ...s,
+            allPoses: [],
+            poseCount: 0,
             landmarks: null,
             kneeAngleLeft: null,
             kneeAngleRight: null,
@@ -115,26 +147,36 @@ export function usePoseLoop(
     const landmarker = landmarkerRef.current
     if (!video || !landmarker) return
 
-    const currentTimeMs = video.currentTime * 1000
+    const currentTimeMs = Math.round(video.currentTime * 1000)
     if (currentTimeMs <= 0) return
 
-    lastTimestampRef.current = currentTimeMs
-    const result = detectForImage(landmarker, video)
+    const results = detectForImage(landmarker, video)
+    // Reset so VIDEO mode resumes cleanly after the IMAGE mode switch
+    lastTimestampRef.current = -1
 
-    if (result) {
-      const kneeAngleLeft = computeKneeAngleFromResult(result, 'left', confidenceThreshold)
-      const kneeAngleRight = computeKneeAngleFromResult(result, 'right', confidenceThreshold)
+    if (results.length > 0) {
+      const allPoses = results.map((r) => r.landmarks)
+      const selected = Math.min(selectedIndexRef.current, results.length - 1)
+      const selectedResult = results[selected]
+
+      const kneeAngleLeft = computeKneeAngleFromResult(selectedResult, 'left', confidenceThreshold)
+      const kneeAngleRight = computeKneeAngleFromResult(selectedResult, 'right', confidenceThreshold)
 
       setState((s) => ({
         ...s,
-        landmarks: result.landmarks,
+        allPoses,
+        poseCount: results.length,
+        selectedPoseIndex: selected,
+        landmarks: selectedResult.landmarks,
         kneeAngleLeft,
         kneeAngleRight,
-        inferenceLatency: result.inferenceLatencyMs,
+        inferenceLatency: selectedResult.inferenceLatencyMs,
       }))
     } else {
       setState((s) => ({
         ...s,
+        allPoses: [],
+        poseCount: 0,
         landmarks: null,
         kneeAngleLeft: null,
         kneeAngleRight: null,
@@ -160,7 +202,7 @@ export function usePoseLoop(
     }
   }, [])
 
-  return { ...state, runSingleFrame }
+  return { ...state, runSingleFrame, setSelectedPoseIndex }
 }
 
 function computeKneeAngleFromResult(
