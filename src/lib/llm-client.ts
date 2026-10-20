@@ -1,7 +1,7 @@
 import type { CapturedFrame, SessionSummary } from './measurement-buffer'
 
-const API_KEY = import.meta.env.VITE_SEEKR_API_KEY as string
-const MODEL = (import.meta.env.VITE_SEEKR_MODEL as string) || 'Qwen/Qwen2.5-VL-32B-Instruct'
+const API_KEY = import.meta.env.VITE_LLM_API_KEY as string
+const MODEL = (import.meta.env.VITE_LLM_MODEL as string) || 'Qwen/Qwen2.5-VL-32B-Instruct'
 
 const SYSTEM_PROMPT = `You are a cycling biomechanics coach. You analyze knee angle measurements and video frames captured from a cyclist on a trainer or road bike.
 
@@ -41,12 +41,12 @@ export interface CoachingResponse {
 
 export async function getCoaching(summary: SessionSummary): Promise<CoachingResponse> {
   if (!API_KEY) {
-    throw new Error('VITE_SEEKR_API_KEY not set. Add it to .env file.')
+    throw new Error('VITE_LLM_API_KEY not set. Add it to .env file.')
   }
 
   const userContent = buildUserContent(summary)
 
-  const response = await fetch('/api/seekrflow/inference/chat/completions', {
+  const response = await fetch('/api/llm/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export async function getCoaching(summary: SessionSummary): Promise<CoachingResp
 
   if (!response.ok) {
     const errorText = await response.text()
-    throw new Error(`SeekrFlow API error (${response.status}): ${errorText}`)
+    throw new Error(`LLM API error (${response.status}): ${errorText}`)
   }
 
   const data = await response.json()

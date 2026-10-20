@@ -5,10 +5,10 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   server: {
     proxy: {
-      '/api/seekrflow': {
-        target: 'https://flow.seekr.com/v1',
+      '/api/llm': {
+        target: 'http://localhost:11434/v1',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/seekrflow/, ''),
+        rewrite: (path) => path.replace(/^\/api\/llm/, ''),
       },
     },
   },

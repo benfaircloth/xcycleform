@@ -2,7 +2,7 @@
 
 ## D-001 — Deterministic measurement before generative interpretation
 **Status:** Accepted  
-Pose landmarks, geometry, temporal drift, and event detection are deterministic. SeekrFlow does not invent measurements.
+Pose landmarks, geometry, temporal drift, and event detection are deterministic. The LLM does not invent measurements.
 
 ## D-002 — Local-first raw data
 **Status:** Accepted  
@@ -12,9 +12,9 @@ Raw video and high-frequency landmark data remain local by default for the MVP. 
 **Status:** Accepted  
 The MVP will not present unsourced “ideal angle” rules as universal green/yellow/red truth. Real-time indicators prioritize tracking quality and meaningful deviation.
 
-## D-004 — SeekrFlow is included in the technical MVP
+## D-004 — LLM coaching is included in the technical MVP
 **Status:** Accepted  
-SeekrFlow enters at Phase 5 as a thin evidence-backed vertical slice rather than an early dependency.
+LLM inference enters at Phase 5 as a thin evidence-backed vertical slice rather than an early dependency.
 
 ## D-005 — Agentic behavior must be earned
 **Status:** Accepted  

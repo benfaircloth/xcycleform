@@ -21,7 +21,7 @@ Validate the core visual pipeline: can we reliably observe a cyclist from a side
 - at least five representative regression fixture frames.
 
 ### Explicitly forbidden
-- SeekrFlow / LLM inference / RAG / coaching agents;
+- LLM inference / RAG / coaching agents;
 - natural-language coaching;
 - normative bike-fit judgment (green/yellow/red scoring);
 - multiple biomechanics metrics beyond knee angle;
@@ -69,7 +69,7 @@ Prove reliable side-profile pose capture and live skeleton visualization on the 
 - green/yellow/red biomechanics judgment;
 - session recording;
 - persistent session storage;
-- SeekrFlow / RAG / coaching.
+- LLM / RAG / coaching.
 
 ### Exit gate
 - side-profile cyclist can be captured continuously;
@@ -174,7 +174,7 @@ Create the stable deterministic artifact that forms the boundary between measure
 - local replay support if required to inspect evidence.
 
 ### Explicitly forbidden
-- SeekrFlow calls;
+- LLM calls;
 - coaching text;
 - cloud user history;
 - agent frameworks;
@@ -190,13 +190,13 @@ Create the stable deterministic artifact that forms the boundary between measure
 
 ---
 
-## Phase 5 — SeekrFlow Coaching
+## Phase 5 — LLM Coaching
 
 ### Objective
-Demonstrate one complete evidence-backed coaching path through SeekrFlow.
+Demonstrate one complete evidence-backed coaching path through an LLM inference endpoint.
 
 ### Permitted scope
-- SeekrFlow endpoint/inference integration;
+- LLM endpoint / inference integration;
 - small curated RAG corpus;
 - structured coaching-output schema;
 - evidence attribution;
@@ -205,7 +205,7 @@ Demonstrate one complete evidence-backed coaching path through SeekrFlow.
 - mapping one or more observed events to qualified interpretations and recommendations.
 
 ### Explicitly forbidden
-- full autonomous multi-tool agent unless required by SeekrFlow's minimal execution model;
+- full autonomous multi-tool agent;
 - broad longitudinal personalization;
 - account system;
 - complex cloud session management;

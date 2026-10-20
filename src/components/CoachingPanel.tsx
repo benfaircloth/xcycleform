@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MeasurementBuffer } from '../lib/measurement-buffer'
-import { getCoaching, type CoachingResponse } from '../lib/seekrflow-client'
+import { getCoaching, type CoachingResponse } from '../lib/llm-client'
 
 interface CoachingPanelProps {
   buffer: MeasurementBuffer

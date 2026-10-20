@@ -21,5 +21,5 @@ Only a human reviewer may update `Authorized phase`.
 - Working name: xCycleForm.
 - Initial deployment target: browser/PWA on a phone positioned side-on to a cyclist on an indoor trainer.
 - Raw pose/video data should remain local by default.
-- SeekrFlow enters only in Phase 5 after the deterministic Session Evidence Package is validated.
+- LLM inference enters only in Phase 5 after the deterministic Session Evidence Package is validated.
 - Phase 0 redefined: Visual Pipeline Validation. Full pose-to-measurement loop with prerecorded video first, then live camera. Knee extension angle as the validation metric. See updated PHASE_0 spec.

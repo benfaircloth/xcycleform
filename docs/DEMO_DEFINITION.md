@@ -9,7 +9,7 @@ The technical MVP proves one complete evidence chain:
 3. deterministic metrics are calculated;
 4. a sustained posture change is detected;
 5. the session becomes a structured evidence package;
-6. SeekrFlow produces a qualified coaching interpretation;
+6. the LLM produces a qualified coaching interpretation;
 7. the response shows which session evidence and external evidence support the guidance;
 8. the system can abstain when confidence is insufficient.
 
@@ -19,11 +19,11 @@ The demo MVP packages the above into a coherent experience a viewer can understa
 
 ### Ideal demo narrative
 
-> At 47:12, the rider's torso angle began moving away from the session baseline. The change persisted for seven minutes and reached 6.7 degrees. Pose quality remained high during that window. xCycleForm identifies this as a measured postural drift event, not as “fatigue.” SeekrFlow then interprets the event using a curated biomechanics source and explains that fatigue-related postural change is one possible explanation. Because this is a single session, it recommends monitoring recurrence rather than changing saddle position. The viewer can inspect both the underlying ride evidence and the source used in the interpretation.
+> At 47:12, the rider's torso angle began moving away from the session baseline. The change persisted for seven minutes and reached 6.7 degrees. Pose quality remained high during that window. xCycleForm identifies this as a measured postural drift event, not as “fatigue.” The LLM then interprets the event using a curated biomechanics source and explains that fatigue-related postural change is one possible explanation. Because this is a single session, it recommends monitoring recurrence rather than changing saddle position. The viewer can inspect both the underlying ride evidence and the source used in the interpretation.
 
-## What the demo should communicate about Seekr
+## What the demo should communicate
 
-- SeekrFlow can power application logic beyond chat.
+- LLMs can power application logic beyond chat.
 - The AI operates over structured, externally measurable evidence.
 - Retrieval supplies domain context rather than pretending the model already “knows” the correct fit.
 - Context attribution can expose why a recommendation was generated.

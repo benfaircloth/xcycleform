@@ -24,7 +24,7 @@ Responsibilities:
 - local high-volume session data;
 - evidence-package generation.
 
-### SeekrFlow / cloud reasoning
+### LLM / cloud reasoning
 
 ```text
 Session Evidence Package
@@ -45,9 +45,9 @@ Responsibilities:
 
 ## 2. Boundary principle
 
-The client owns **measurement truth**. SeekrFlow owns **interpretation under evidence**.
+The client owns **measurement truth**. The LLM owns **interpretation under evidence**.
 
-SeekrFlow must never be asked to infer a numeric knee angle from prose if the deterministic system can calculate it. Conversely, the deterministic engine must never encode a causal explanation such as “fatigue” merely because a metric drifted.
+The LLM must never be asked to infer a numeric knee angle from prose if the deterministic system can calculate it. Conversely, the deterministic engine must never encode a causal explanation such as “fatigue” merely because a metric drifted.
 
 ## 3. Internal client modules
 
@@ -96,7 +96,7 @@ Suggested conceptual modules; names may vary with the repository.
 
 ### CoachingClient
 - Phase 5+ only;
-- sends evidence package to SeekrFlow;
+- sends evidence package to the inference endpoint;
 - validates structured response;
 - handles errors and abstentions.
 
@@ -151,7 +151,7 @@ Represent and surface:
 - low confidence;
 - insufficient setup quality;
 - insufficient evidence for interpretation;
-- SeekrFlow/network failure;
+- inference endpoint / network failure;
 - retrieved evidence not applicable enough to support a recommendation.
 
 Do not silently replace missing evidence with generated certainty.
